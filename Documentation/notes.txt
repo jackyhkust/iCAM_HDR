@@ -1,0 +1,3 @@
+generated with pandoc:
+
+pandoc -s -S --toc -c style.css -T "CS 766 - HDR Project Documentation" -A footer.html full_wiki.md -o readme.html

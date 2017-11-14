@@ -1,0 +1,423 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Ke Ma" />
+  <meta name="author" content="Christopher Bodden" />
+  <title>CS 766 - HDR Project Documentation</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+<body>
+<div id="header">
+<h1 class="title">CS 766 - HDR Project Documentation</h1>
+<h2 class="author">Ke Ma</h2>
+<h2 class="author">Christopher Bodden</h2>
+<h3 class="date">2/19/2015</h3>
+</div>
+<div id="TOC">
+<ul>
+<li><a href="#project-overview">Project Overview</a><ul>
+<li><a href="#links">Links</a></li>
+<li><a href="#assignment-description">Assignment Description</a></li>
+<li><a href="#features">Features</a><ul>
+<li><a href="#basic-features">Basic Features</a></li>
+<li><a href="#bonus-features">“Bonus” Features</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#results">Results</a><ul>
+<li><a href="#image-to-be-vote-friday-night">Image to be Vote: <em>Friday Night</em></a></li>
+<li><a href="#reproducing-our-results">Reproducing Our Results</a></li>
+<li><a href="#findings">Findings</a></li>
+</ul></li>
+<li><a href="#using-the-gui">Using the GUI</a><ul>
+<li><a href="#starting-the-gui">Starting the GUI</a></li>
+<li><a href="#loading-images">Loading Images</a><ul>
+<li><a href="#using-a-series-of-ldr-images">Using a series of LDR Images</a></li>
+<li><a href="#using-a-.hdr-image">Using a .hdr Image</a></li>
+</ul></li>
+<li><a href="#aligning-images">Aligning Images</a></li>
+<li><a href="#recovering-the-response-curves-and-producing-a-radiance-map">Recovering the Response Curves and Producing a Radiance Map</a></li>
+<li><a href="#tone-mapping">Tone Mapping</a><ul>
+<li><a href="#picking-settings">Picking Settings</a></li>
+<li><a href="#matlab-built-in-method">MATLAB Built-In Method</a></li>
+<li><a href="#gamma-compression">Gamma Compression</a></li>
+<li><a href="#reinhard-method">Reinhard Method</a></li>
+<li><a href="#drago-method">Drago Method</a></li>
+<li><a href="#durand-method">Durand Method</a></li>
+</ul></li>
+<li><a href="#saving-images">Saving Images</a><ul>
+<li><a href="#saving-hdr-radiance-map">Saving HDR Radiance Map</a></li>
+<li><a href="#saving-tone-mapped-hdr-image">Saving Tone Mapped HDR Image</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#function-descriptions">Function Descriptions</a><ul>
+<li><a href="#hdr_gui.m">hdr_gui.m</a></li>
+<li><a href="#loadimages.m">loadImages.m</a></li>
+<li><a href="#alignmtb.m">alignMTB.m</a></li>
+<li><a href="#samplepxs.m">samplePxs.m</a></li>
+<li><a href="#gsolve.m">gSolve.m</a></li>
+<li><a href="#mergeexps.m">mergeExps.m</a></li>
+<li><a href="#makeradmap.m">makeRadmap.m</a></li>
+<li><a href="#tonemapgamma.m">toneMapGamma.m</a></li>
+<li><a href="#tonemapbasic.m">toneMapBasic.m</a></li>
+<li><a href="#tonemapdrago.m">toneMapDrago.m</a></li>
+<li><a href="#tonemapdurand.m">toneMapDurand.m</a></li>
+<li><a href="#other-files">Other Files</a><ul>
+<li><a href="#enlargeimage.m"><em>enlargeImage.m</em></a></li>
+<li><a href="#tone_map_settings.m"><em>tone_map_settings.m</em></a></li>
+<li><a href="#hdr_gui.fig"><em>hdr_gui.fig</em></a></li>
+<li><a href="#tone_map_settings.fig"><em>tone_map_settings.fig</em></a></li>
+<li><a href="#testscriptsalignmtb_test.m"><em>TestScripts\alignMTB_test.m</em></a></li>
+<li><a href="#testscriptsgsolve_test.m"><em>TestScripts\gSolve_test.m</em></a></li>
+<li><a href="#testscriptsmakeradmap_test.m"><em>TestScripts\makeRadmap_test.m</em></a></li>
+<li><a href="#testscriptsmergeexps_test.m"><em>TestScripts\mergeExps_test.m</em></a></li>
+<li><a href="#testscriptstonemap_test.m"><em>TestScripts\toneMap_test.m</em></a></li>
+</ul></li>
+</ul></li>
+<li><a href="#credits">Credits</a><ul>
+<li><a href="#ke-ma">Ke Ma</a></li>
+<li><a href="#christopher-bodden">Christopher Bodden</a></li>
+</ul></li>
+<li><a href="#references">References</a></li>
+</ul>
+</div>
+<h1 id="project-overview">Project Overview</h1>
+<h2 id="links">Links</h2>
+<ul>
+<li>Repository: <a href="https://github.com/cbod/cs766-hdr" class="uri">https://github.com/cbod/cs766-hdr</a></li>
+<li>Wiki: <a href="https://github.com/cbod/cs766-hdr/wiki" class="uri">https://github.com/cbod/cs766-hdr/wiki</a></li>
+</ul>
+<h2 id="assignment-description">Assignment Description</h2>
+<p>High dynamic range (HDR) images have much larger dynamic range than traditional images’ 256 brightness levels. In addition, they correspond linearly to physical irradiance values of the scene. Hence, they have many applications in vision. In this project, we implement algorithms to assemble an HDR image from several low dynamic range images.</p>
+<h2 id="features">Features</h2>
+<p>This is a brief description of our implementation. More details can be found in the other pages of the wiki.</p>
+<h3 id="basic-features">Basic Features</h3>
+<ul>
+<li>Debevec’s Method for HDR reconstruction</li>
+<li>Gamma Compression Tone Mapping Algorithm</li>
+<li>Reinhard’s Tone Mapping Algorithm</li>
+</ul>
+<h3 id="bonus-features">“Bonus” Features</h3>
+<ul>
+<li>Ward’s MTB Image Alignment Algorithm</li>
+<li>Drago’s Tone Mapping Algorithm</li>
+<li>Durand’s Tone Mapping Algorithm</li>
+<li>GUI to Pipeline the Image Recreation and Expose All Functions Implemented</li>
+</ul>
+<h1 id="results">Results</h1>
+<h2 id="image-to-be-vote-friday-night">Image to be Vote: <em>Friday Night</em></h2>
+<p>Our final image we call <em>Friday Night</em> mainly because we took it on Friday evening. The image features an interesting scene that is great for HDR. The capitol building and street lights are very bright against the dark sky. They also wash out the finer details in the buildings. HDR allows us to preserve these features and present a striking scene.</p>
+<div class="figure">
+<img src="images/FridayNight-Durand.jpg" />
+
+</div>
+<h2 id="reproducing-our-results">Reproducing Our Results</h2>
+<ol style="list-style-type: decimal">
+<li>Load the LDR images: <em>FridayNight-x.jpg</em></li>
+<li>Select <em>FridayNight-ExpTime.txt</em></li>
+<li>Recover the response curve and radiance map</li>
+<li>Tone map with Durand at contrast set to 6</li>
+</ol>
+<p>The only post processing we did was down-sampling the final image because our original image was taken at 18 megapixels.</p>
+<h2 id="findings">Findings</h2>
+<p>We found that the best tone mapping algorithm that we implemented was Durand followed by Drago. Both of these produce dramatic, vivid colors. However, Durand tends to preserve more of the finer details. Reinhard, gamma compression, and the built-in MATLAB method all produce less interesting results. The built-in MATLAB method and gamma compression are washed out, while the Reinhard method produces less interesting colors.</p>
+<h1 id="using-the-gui">Using the GUI</h1>
+<p>To make working with our functions easier, we’ve implemented a simple GUI that streamlines the process and visually displays the results of image operations. Users can open a series of LDR images then align the images, recover the response functions, build the radiance map, and tone map to produce a final result. Or the users can directly open a .hdr file and tone map to produce a final result.</p>
+<div class="figure">
+<img src="images/GUI_Snapshot.jpg" />
+
+</div>
+<h2 id="starting-the-gui">Starting the GUI</h2>
+<p>Simply run the file <em>hdr_gui.m</em></p>
+<h2 id="loading-images">Loading Images</h2>
+<p>We provide 2 methods to acquire the radiance map: 1) from a series of LDR images or 2) from a .hdr file</p>
+<h3 id="using-a-series-of-ldr-images">Using a series of LDR Images</h3>
+<ol style="list-style-type: decimal">
+<li>Select Open -&gt; Load LDR Images.</li>
+<li>A dialog will open for you to select all of the LDR images.</li>
+<li>A second dialog will open to select the .txt file with image exposure times. (one exposure time per line, exposure time is represented as its reciprocal, e.g. 1/10s -&gt; 10)</li>
+<li>Click any of the loaded images to display the enlarged image in a new window.</li>
+</ol>
+<h3 id="using-a-.hdr-image">Using a .hdr Image</h3>
+<ol style="list-style-type: decimal">
+<li>Select Open -&gt; Open HDR Radiance Map.</li>
+<li>A dialog will open for you to select the HDR image.</li>
+</ol>
+<h2 id="aligning-images">Aligning Images</h2>
+<p><em>This option is available after opening a series of LDR images successfully.</em></p>
+<p>Simply select Tools -&gt; Align Images (MTB).</p>
+<p>This is an implementation of the method describe in:</p>
+<p>Ward, G. (2003). <a href="http://pages.cs.wisc.edu/~lizhang/courses/cs766-2008f/projects/hdr/jgtpap2.pdf">Fast, robust image registration for compositing high dynamic range photographs from hand-held exposures</a></p>
+<p><em>Blended Images before Alignment</em></p>
+<div class="figure">
+<img src="images/alignment_before.jpg" />
+
+</div>
+<p><em>Blended Images after Alignment</em></p>
+<div class="figure">
+<img src="images/alignment_after.jpg" />
+
+</div>
+<h2 id="recovering-the-response-curves-and-producing-a-radiance-map">Recovering the Response Curves and Producing a Radiance Map</h2>
+<p><em>This option is available after opening a series of LDR images successfully.</em></p>
+<p>Recovering the response curves and producing the radiance map are combined into a single operation. To perform this operation:</p>
+<ol style="list-style-type: decimal">
+<li>Select Tools -&gt; Recover Radiance Map.</li>
+<li>Click on either the displayed radiance map or any of the curves to enlarge the object in a new window.</li>
+</ol>
+<p>This is an implementation of the method describe in:</p>
+<p>Debevec, P. E., &amp; Malik, J. (1997). <a href="http://vsingh-www.cs.wisc.edu/cs766-12/lec/debevec-siggraph97.pdf">Recovering high dynamic range radiance maps from photographs</a></p>
+<p><em>Response Curve</em></p>
+<div class="figure">
+<img src="images/response_curve.jpg" />
+
+</div>
+<p><em>Radiance Map in False Color</em></p>
+<div class="figure">
+<img src="images/radiance_map.jpg" />
+
+</div>
+<h2 id="tone-mapping">Tone Mapping</h2>
+<p><em>This option is available after recovering the radiance map from a series of LDR images successfully or opening a .hdr file.</em></p>
+<p>We provide 5 tone mapping methods and parameter settings in the Tools -&gt; Tone Map menu. The following explains each option:</p>
+<h3 id="picking-settings">Picking Settings</h3>
+<p>This menu allows users to tune relevant tone mapping parameters for each specific algorithm. You must click ‘Apply’ to save the settings.</p>
+<ol style="list-style-type: decimal">
+<li>Select Tools -&gt; Tone Map -&gt; Parameter Settings.</li>
+<li>Tune any parameter of interest.</li>
+<li>Click ‘Apply’.</li>
+</ol>
+<div class="figure">
+<img src="images/tonemap_settings.jpg" />
+
+</div>
+<h3 id="matlab-built-in-method">MATLAB Built-In Method</h3>
+<p>This simply uses the built-in MATLAB tonemap() method. This is provided mainly for reference.</p>
+<div class="figure">
+<img src="images/FridayNight-Matlab.jpg" />
+
+</div>
+<h3 id="gamma-compression">Gamma Compression</h3>
+<p>This is an implementation of a simple gamma compression.</p>
+<div class="figure">
+<img src="images/FridayNight-Gamma.jpg" />
+
+</div>
+<h3 id="reinhard-method">Reinhard Method</h3>
+<p>This is an implementation of the method describe in:</p>
+<p>Reinhard, E., &amp; Devlin, K. (2005). <a href="http://pages.cs.wisc.edu/~lizhang/courses/cs766-2012f/projects/hdr/Reinhard2005DRR.pdf">Dynamic range reduction inspired by photoreceptor physiology</a></p>
+<div class="figure">
+<img src="images/FridayNight-Reinhard.jpg" />
+
+</div>
+<h3 id="drago-method">Drago Method</h3>
+<p>This is an implementation of the method describe in:</p>
+<p>Drago, F., Myszkowski, K., Annen, T., &amp; Chiba, N. (2003). <a href="http://pages.cs.wisc.edu/~lizhang/courses/cs766-2012f/projects/hdr/Drago2003ALM.pdf">Adaptive logarithmic mapping for displaying high contrast scenes</a></p>
+<div class="figure">
+<img src="images/FridayNight-Drago.jpg" />
+
+</div>
+<h3 id="durand-method">Durand Method</h3>
+<p>This is an implementation of the method describe in:</p>
+<p>Durand, F., &amp; Dorsey, J. (2002). <a href="http://pages.cs.wisc.edu/~lizhang/courses/cs766-2012f/projects/hdr/DurandBilateral.pdf">Fast bilateral filtering for the display of high-dynamic-range images</a></p>
+<div class="figure">
+<img src="images/FridayNight-Durand.jpg" />
+
+</div>
+<h2 id="saving-images">Saving Images</h2>
+<p>Using the Save menu, we offer two options for saving working: to save the radiance map as a .hdr file and to save the final tone mapped image.</p>
+<h3 id="saving-hdr-radiance-map">Saving HDR Radiance Map</h3>
+<p><em>This option is available after recovering the radiance map from a series of LDR images successfully or opening a .hdr file.</em></p>
+<ol style="list-style-type: decimal">
+<li>Select Save -&gt; Save HDR Radiance Map.</li>
+<li>Select the .hdr file destination and name.</li>
+<li>Click Save.</li>
+</ol>
+<h3 id="saving-tone-mapped-hdr-image">Saving Tone Mapped HDR Image</h3>
+<p><em>This option is available after tone mapping a radiance map.</em></p>
+<ol style="list-style-type: decimal">
+<li>Select Save -&gt; Save Tone Mapped HDR Image.</li>
+<li>Select the image destination and name.</li>
+<li>Click Save.</li>
+</ol>
+<h1 id="function-descriptions">Function Descriptions</h1>
+<p>Below provide basic descriptions of our functions.</p>
+<h2 id="hdr_gui.m">hdr_gui.m</h2>
+<p><code>function varargout = hdr_gui(varargin)</code></p>
+<p>This function launches the main GUI window. It is not meant to be called programatically! Please run this as the main script in MATLAB.</p>
+<h2 id="loadimages.m">loadImages.m</h2>
+<p><code>function imgs = loadImages(imgFiles)</code></p>
+<p>Inputs:</p>
+<ul>
+<li>imgFiles: a vector of image filenames to load (1D cell array)</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>imgs: the loaded color images (4D array, height x width x color x imageIndex)</li>
+</ul>
+<h2 id="alignmtb.m">alignMTB.m</h2>
+<p><code>function alignedImgs = alignMTB(imgs, offsetRange)</code></p>
+<p>Inputs:</p>
+<ul>
+<li>imgs: a vector of the original color images (4D array, height x width x color x imageIndex)</li>
+<li>offsetRange: allowable offset range (0-1)</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>alignedImgs: a vector of the aligned color images (4D array, height x width x color x imageIndex)</li>
+</ul>
+<h2 id="samplepxs.m">samplePxs.m</h2>
+<p><code>function Z = samplePxs(imgs)</code></p>
+<p>Inputs:</p>
+<ul>
+<li>imgs: a vector of greyscale images (3D array, height x width x imageIndex)</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>Z: a vector of randomly sampled pixels (2D array, pixelIndex x imageIndex)</li>
+</ul>
+<h2 id="gsolve.m">gSolve.m</h2>
+<p><code>function [g,lE] = gSolve(Z,B,l,w)</code></p>
+<p>Inputs:</p>
+<ul>
+<li>Z: a vector of randomly sampled pixels (2D array, pixelIndex x imageIndex)</li>
+<li>B: a vector of natural log exposure time values</li>
+<li>l: smoothing parameter lambda</li>
+<li>w: a vector of weighting factors (hat function)</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>g: the inverse of f function (response curve)</li>
+<li>lE: the sampled natural log exposure values</li>
+</ul>
+<h2 id="mergeexps.m">mergeExps.m</h2>
+<p><code>function E = mergeExps(Z,B,g,w)</code></p>
+<p>Inputs:</p>
+<ul>
+<li>Z: a vector of greyscale images (3D array, height x width x imageIndex)</li>
+<li>B: a vector of natural log exposure time values</li>
+<li>g: the inverse of f function (response curve)</li>
+<li>w: a vector of weighting factors (hat function)</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>E: the recovered greyscale radiance map</li>
+</ul>
+<h2 id="makeradmap.m">makeRadmap.m</h2>
+<p><code>function [radmap, rG, gG, bG, rPxVals, gPxVals, bPxVals, rLgExps, gLgExps, bLgExps] = makeRadmap(imgs,expTimes,smoothness)</code></p>
+<p>Inputs:</p>
+<ul>
+<li>imgs: a vector of the original color images (4D array, height x width x color x imageIndex)</li>
+<li>expTimes: a vector of exposure times</li>
+<li>smoothness: smoothing parameter lambda</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>radmap: the recovered color radiance map</li>
+<li>rG: the inverse of f function (response curve) for the red channel</li>
+<li>gG: the inverse of f function (response curve) for the green channel</li>
+<li>bG: the inverse of f function (response curve) for the blue channel</li>
+<li>rPxVals: the sampled pixel values for the red channel</li>
+<li>gPxVals: the sampled pixel values for the green channel</li>
+<li>bPxVals: the sampled pixel values for the blue channel</li>
+<li>rLgExps: the sampled natural log exposure values for the red channel</li>
+<li>gLgExps: the sampled natural log exposure values for the green channel</li>
+<li>bLgExps: the sampled natural log exposure values for the blue channel</li>
+</ul>
+<h2 id="tonemapgamma.m">toneMapGamma.m</h2>
+<p><code>function [image] = toneMapGamma(radMap, gamma)</code></p>
+<p>Inputs:</p>
+<ul>
+<li>radMap: a color radiance map</li>
+<li>gamma: gamma parameter (0-1)</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>image: the tone mapped HDR image</li>
+</ul>
+<h2 id="tonemapbasic.m">toneMapBasic.m</h2>
+<p><code>function [image] = toneMapBasic(radMap, a)</code></p>
+<p>Inputs:</p>
+<ul>
+<li>radMap: a color radiance map</li>
+<li>a: brightness parameter (0.09, 0.18, 0.36 or 0.72)</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>image: the tone mapped HDR image</li>
+</ul>
+<h2 id="tonemapdrago.m">toneMapDrago.m</h2>
+<p><code>function [image] = toneMapDrago(radMap, b)</code></p>
+<p>Inputs:</p>
+<ul>
+<li>radMap: a color radiance map</li>
+<li>b: bias parameter (0.7-1.0)</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>image: the tone mapped HDR image</li>
+</ul>
+<h2 id="tonemapdurand.m">toneMapDurand.m</h2>
+<p><code>function image = toneMapDurand(radmap, contrast)</code></p>
+<p>Inputs:</p>
+<ul>
+<li>radmap: a color radiance map</li>
+<li>contrast: base contrast parameter (around 5)</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>image: the tone mapped HDR image</li>
+</ul>
+<h2 id="other-files">Other Files</h2>
+<p>Some other files that are not meant to be used functionally, but are either needed for the GUI or were used for testing.</p>
+<h3 id="enlargeimage.m"><em>enlargeImage.m</em></h3>
+<p>This function is simply a helper to allow enlarging an image when clicked.</p>
+<h3 id="tone_map_settings.m"><em>tone_map_settings.m</em></h3>
+<p>Launches the tone map settings menu.</p>
+<h3 id="hdr_gui.fig"><em>hdr_gui.fig</em></h3>
+<p>The MATLAB figure for the main program GUI.</p>
+<h3 id="tone_map_settings.fig"><em>tone_map_settings.fig</em></h3>
+<p>The MATLAB figure for the tone map settings menu.</p>
+<h3 id="testscriptsalignmtb_test.m"><em>TestScripts\alignMTB_test.m</em></h3>
+<p>A script we used to test the MTB alignment method.</p>
+<h3 id="testscriptsgsolve_test.m"><em>TestScripts\gSolve_test.m</em></h3>
+<p>A script we used to test the solver method for recovering response curves.</p>
+<h3 id="testscriptsmakeradmap_test.m"><em>TestScripts\makeRadmap_test.m</em></h3>
+<p>A script we used to test the radiance map creation method.</p>
+<h3 id="testscriptsmergeexps_test.m"><em>TestScripts\mergeExps_test.m</em></h3>
+<p>A script we used to test the exposure merging method.</p>
+<h3 id="testscriptstonemap_test.m"><em>TestScripts\toneMap_test.m</em></h3>
+<p>A script we used to test the various tone mapping methods.</p>
+<h1 id="credits">Credits</h1>
+<p>Below is a break-down of the work description. We worked together on taking the images and also helped fix some of each other’s bugs!</p>
+<h2 id="ke-ma">Ke Ma</h2>
+<ul>
+<li>Random Pixel Sampler</li>
+<li>Response Curve Solution</li>
+<li>Radiance Map Creation</li>
+<li>MTB Alignment</li>
+<li>Durand Tone Mapping</li>
+</ul>
+<h2 id="christopher-bodden">Christopher Bodden</h2>
+<ul>
+<li>Reinhart Tone Mapping</li>
+<li>Drago Tone Mapping</li>
+<li>GUI</li>
+<li>Documentation Wiki</li>
+</ul>
+<h1 id="references">References</h1>
+<ol style="list-style-type: decimal">
+<li>Debevec, P. E., &amp; Malik, J. (1997). <a href="http://vsingh-www.cs.wisc.edu/cs766-12/lec/debevec-siggraph97.pdf">Recovering high dynamic range radiance maps from photographs</a></li>
+<li>Ward, G. (2003). <a href="http://pages.cs.wisc.edu/~lizhang/courses/cs766-2008f/projects/hdr/jgtpap2.pdf">Fast, robust image registration for compositing high dynamic range photographs from hand-held exposures</a></li>
+<li>Reinhard, E., &amp; Devlin, K. (2005). <a href="http://pages.cs.wisc.edu/~lizhang/courses/cs766-2012f/projects/hdr/Reinhard2005DRR.pdf">Dynamic range reduction inspired by photoreceptor physiology</a></li>
+<li>Drago, F., Myszkowski, K., Annen, T., &amp; Chiba, N. (2003). <a href="http://pages.cs.wisc.edu/~lizhang/courses/cs766-2012f/projects/hdr/Drago2003ALM.pdf">Adaptive logarithmic mapping for displaying high contrast scenes</a></li>
+<li>Durand, F., &amp; Dorsey, J. (2002). <a href="http://pages.cs.wisc.edu/~lizhang/courses/cs766-2012f/projects/hdr/DurandBilateral.pdf">Fast bilateral filtering for the display of high-dynamic-range images</a></li>
+<li>Paris, S., &amp; Durand, F. (2006). <a href="http://dspace.mit.edu/bitstream/handle/1721.1/34876/MIT-CSAIL-TR-2006-073.pdf?sequence=1">A fast approximation of the bilateral filter using a signal processing approach</a></li>
+</ol>
+<hr />
+<p>&copy;2015 Ke Ma, Christopher Bodden</p>
+</body>
+</html>
